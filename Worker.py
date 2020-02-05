@@ -11,11 +11,17 @@ ap.add_argument("-a", "--accid", required=True,
    help="Account ID Missing")
 ap.add_argument("-p", "--accpc", required=True,
    help="Accoutn Passcode Missing")
+ap.add_argument("-gcredpath", "--gcp", required=True,
+   help="Google Cred Path Missing")
+
 args = vars(ap.parse_args())
 
 accid = args['accid']
 
 accpc = args['accpc']
+
+gcp = args['gcp']
+
 print accid + " " + accpc
 
 # Setup today's date
@@ -46,6 +52,8 @@ def changeTS(ts):
 	return updatedTS
 
 # Setup Creds
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = str(gcp)
+
 print "Credendtials from environ:" + format(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"))
 
 # Construct a BigQuery client object.
@@ -55,12 +63,7 @@ client = bigquery.Client()
 # Create Query
 query = """
 SELECT 
-event_date as date, 
 cast(event_timestamp as INT64) as event_time_int,
-TIMESTAMP(CURRENT_DATETIME()) as current_timestamp,
-TIMESTAMP_MICROS(cast(event_timestamp as INT64)) as event_timestamp,
-TIMESTAMP_DIFF(TIMESTAMP(CURRENT_DATETIME()), TIMESTAMP_MICROS(cast(event_timestamp as INT64)), MINUTE) as diff,
-event_name as event_name, 
 user_prop.value as Object_id
 FROM `zeke-160bc.analytics_205516970.events_intraday_%s` AS t, UNNEST(user_properties) AS user_prop
 WHERE user_prop.key = "objectId" AND event_name="app_remove" AND TIMESTAMP_DIFF(TIMESTAMP(CURRENT_DATETIME()), TIMESTAMP_MICROS(cast(event_timestamp as INT64)), MINUTE)<5
