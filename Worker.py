@@ -54,9 +54,17 @@ client = bigquery.Client()
 
 # Create Query
 query = """
-SELECT user_properties,event_timestamp
-FROM `zeke-160bc.analytics_205516970.events_intraday_%s`
-WHERE event_name="app_remove"
+SELECT 
+event_date as date, 
+cast(event_timestamp as INT64) as event_time_int,
+TIMESTAMP(CURRENT_DATETIME()) as current_timestamp,
+TIMESTAMP_MICROS(cast(event_timestamp as INT64)) as event_timestamp,
+TIMESTAMP_DIFF(TIMESTAMP(CURRENT_DATETIME()), TIMESTAMP_MICROS(cast(event_timestamp as INT64)), MINUTE) as diff,
+event_name as event_name, 
+user_prop.value as Object_id
+FROM `zeke-160bc.analytics_205516970.events_intraday_%s` AS t, UNNEST(user_properties) AS user_prop
+WHERE user_prop.key = "objectId" AND event_name="app_remove" AND TIMESTAMP_DIFF(TIMESTAMP(CURRENT_DATETIME()), TIMESTAMP_MICROS(cast(event_timestamp as INT64)), MINUTE)<5
+
 
 """ % tDate
 
@@ -66,10 +74,8 @@ query_job = client.query(query)  # Make an API request.
 
 print("The query data:")
 for row in query_job:	
-	ts = row["event_timestamp"]
-	for up in row["user_properties"]:
-		if up["key"] == "objectId":
-			ctid =  up["value"]["string_value"]
-			updateCT(ctid,changeTS(ts))
+	ts = row["event_time_int"]
+	ctid =  row["Object_id"]["string_value"]
+	updateCT(ctid,changeTS(ts))
 			
 
