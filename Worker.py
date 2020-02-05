@@ -27,7 +27,7 @@ tDate = today.strftime("%Y%m%d")
 def updateCT(objectId,ts):
 
 	url = "https://api.clevertap.com/1/upload"
-	payload = "{ \"d\": [ { \"objectId\": \"%s\", \"type\": \"event\", \"evtName\": \"Firebase App Uninstall\", \"evtData\": { \"time_stamp\": %s } } ] }" % (objectId,ts)
+	payload = "{ \"d\": [ { \"objectId\": \"%s\", \"type\": \"event\", \"evtName\": \"Firebase App Uninstall\", \"ts\":  %s  } ] }" % (objectId,ts)
 	headers = {
 	    'X-CleverTap-Account-Id': accid,
 	    'X-CleverTap-Passcode': accpc,
